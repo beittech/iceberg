@@ -1,44 +1,51 @@
-# Iceberg Analysis Library
+# Iceberg Codes
 
-This library allows users to:
-
-- Send a Qiskit circuit to a backend compiler API.
-- Simulate the compiled circuit using a circuit-level noise model.
-- Decode the simulation results with post-selection using the Iceberg decoder.
+A Python library for quantum error detection, providing tools to compile, simulate, and decode quantum circuits using Iceberg codes. This library integrates seamlessly with Qiskit, making it easy to detect and mitigate errors in quantum circuits.
 
 ## Installation
 
+You can install Iceberg Codes directly from GitHub using pip:
+
 ```bash
-pip install iceberg
+pip install git+https://github.com/beittech/iceberg.git
 ```
 
-## Example Usage
+## Usage
+
+Here's a quick example demonstrating basic usage:
+
 ```python
-from qiskit import QuantumCircuit
-from qiskit.circuit.random import random_circuit
-from iceberg.compiler import compile_circuit_api
-from iceberg.noise import circuit_level_noise_model
-from iceberg.simulation import simulate_circuit, plot_results
-from iceberg.decoder import decode_counts
+from qiskit import transpile
+from qiskit.circuit.library import quantum_volume
+import iceberg_codes as ice
+from qiskit_aer import AerSimulator
 
-# Create a test circuit
-k = 4
-qc = QuantumCircuit(k)
-rc = random_circuit(k, depth=5, seed=42)
-qc.compose(rc, inplace=True)
+# Generate a quantum volume circuit
+qc = quantum_volume(k := 4, 2, seed=42)
+qc.append(qc.inverse(), qc.qubits)
 
-# Compile the circuit (using QASM format in this example)
-compiled_qc = compile_circuit_api(qc, syndrome_rate=16, input_format="qasm")
+# Compile the circuit with Iceberg error detection
+qc_compiled = transpile(ice.compile(qc, syndrome_rate=16), basis_gates=['x', 'z', 'rz', 'rx', 'rzz'])
 
-# Create a noise simulator with error rate 0.001
-simulator = circuit_level_noise_model(0.001)
+# Simulate and decode results
+sim = AerSimulator()
+counts = sim.run(qc_compiled, shots=2048)
+decoded_result = ice.decode(counts, k=k)
 
-# Simulate the compiled circuit
-counts = simulate_circuit(simulator, compiled_qc, shots=1024)
+print(decoded_result.probabilities_dict())
+```
 
-# Decode the simulation results with post-selection
-decoded_counts = decode_counts(counts, k)
+## Tutorial
 
-# Plot the results
-plot_results(decoded_counts)
-```# iceberg
+A complete interactive tutorial is available in the `tutorials` directory.
+
+## Requirements
+
+- Qiskit
+- Qiskit Aer
+- NumPy
+
+## License
+
+This project is licensed under the MIT License.
+
