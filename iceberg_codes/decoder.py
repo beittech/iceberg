@@ -80,7 +80,7 @@ class IcebergDecoder:
         tf = np.concatenate(
             [np.zeros((k, 1), dtype=bool), (1 - np.eye(k, dtype=bool)), np.ones((k, 1), dtype=bool)], -1
         )
-        self._decoder_transform = np.concat((tf[0][None, ...], tf[1:][::-1]))
+        self._decoder_transform = np.concatenate((tf[0][None, ...], tf[1:][::-1]))
 
     def __call__(self, counts: dict[str, int]) -> DecodedResults:
         """
